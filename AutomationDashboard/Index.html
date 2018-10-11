@@ -1,0 +1,206 @@
+﻿<!doctype html>
+<html lang="en" ng-app="AutomationDashboard">
+<head>
+    <title>Automation Dashboard</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <script src="Scripts/angular/angular.js"></script>
+    <script src="Scripts/angular/angular-route.js"></script>
+    <!--<script src="Scripts/angular-custom/createController.js"></script>-->
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <link href="Styles/Site.css" rel="stylesheet" />
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+
+    <script src="Scripts/angular-custom/app.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+
+            $('.example-popover').popover({
+                container: 'body'
+            })
+        })
+    </script>
+
+</head>
+<body ng-controller="dashboardController">
+
+    <header class="masthead">
+
+        <nav class="navbar navbar-expand-md navbar-light bg-light rounded mb-3">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav text-md-center nav-justified w-100">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="#" ng-click="OpenHome()">Home <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" ng-click="OpenCreate()">Create</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" ng-click="OpenList()">List (for Testing)</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" ng-click="OpenDelete()">Delete</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main role="main">
+
+
+        <div id="divList" class="container" ng-if="isList">
+
+            <h2 class="form-signin-heading">List</h2>
+            <br />
+
+            <div class="list-group" id="list-tab" role="tablist">
+                <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="{{task.TaskId}}" data-toggle="list" href="#{{task.TabId}}" role="tab" aria-controls="home" ng-repeat="task in Tasks">
+                    <span>{{task.TaskName}}</span>
+                    <span>
+                        <span ng-show="task.Status === 'Completed'" class="badge badge-light badge-pill">{{task.ManualRunDuration}} Minutes</span>
+                        <span ng-show="task.Status === 'Completed'" class="badge badge-light badge-pill">vs</span>
+                        <span ng-show="task.Status === 'Completed'" class="badge badge-light badge-pill">{{task.AutomatedRunDuration}} Seconds</span>
+                        <span ng-show="task.Status === 'In Progress'" class="badge badge-primary badge-pill">
+                            {{task.Status}}
+                        </span>
+                        <span ng-show="task.Status === 'Not Started'" class="badge badge-secondary badge-pill">
+                            {{task.Status}}
+                        </span>
+                        <span ng-show="task.Status === 'Completed'" class="badge badge-success badge-pill">
+                            {{task.Status}}
+                        </span>
+                        <span ng-show="task.Status === 'Cancelled'" class="badge badge-danger badge-pill">
+                            {{task.Status}}
+                        </span>
+                    </span>
+                </a>
+            </div>
+            <br />
+            <div class="tab-content show" id="nav-tabContent">
+                <div class="tab-pane fade" id="{{task.TabId}}" role="tabpanel" aria-labelledby="{{task.TaskId}}" ng-repeat="task in Tasks">
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center" ng-repeat="detail in task.Details">{{detail}}</li>
+                    </ul>
+                </div>
+            </div>
+
+            <br />
+            <div class="row text-center placeholders">
+                <div class="col-6 col-sm-6 placeholder">
+                    <img src="data:image/gif;base64,R0lGODlhAQABAIABAAJ12AAAACwAAAAAAQABAAACAkQBADs=" width="100" height="100" class="img-fluid rounded-circle" alt="Manual">
+                    <div class="caption">
+                        <h3>{{Duration.Manual}}</h3>
+                    </div>
+                    <h4>Manual</h4>
+                    <span class="text-muted">Approximate Time for Manual Deployment (In Minutes)</span>
+                </div>
+                <div class="col-6 col-sm-6 placeholder">
+                    <img src="data:image/gif;base64,R0lGODlhAQABAIABAADcgwAAACwAAAAAAQABAAACAkQBADs=" width="100" height="100" class="img-fluid rounded-circle" alt="Automation">
+                    <div class="caption">
+                        <h3>{{Duration.Automated}}</h3>
+                    </div>
+                    <h4>Automation</h4>
+                    <span class="text-muted">Real Time for Automated Deployment (In Minutes)</span>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="divCreate" class="container" ng-if="isCreate">
+            <!--<form class="container" id="needs-validation" ng-if="isCreate" novalidate>-->
+            <h2 class="form-signin-heading">Create</h2>
+            <br />
+            <input type="text" id="inputName" class="form-control" placeholder="Your Name, Will Be Used to Address You in the Email. e.g. Steve Rogers" ng-model="Customer.Name" required autofocus>
+            <br />
+            <input type="email" id="inputEmail" class="form-control" placeholder="Your Email, An Email Will Be Sent On Successful Creation of a New Environment. e.g steve.rogers@marvel.com" ng-model="Customer.EmailID" required>
+            <br />
+            <input type="password" id="inputPassCode" class="form-control" placeholder="PassCode, Will Be Used To Validate the Request. e.g 245d7bd1-72fa-4ab4-a8f2-d224987c8cf4" ng-model="Customer.PassCode" required>
+            <br />
+            <select class="form-control" placeholder="Select Location" ng-model="Customer.Location" ng-options="location for location in Locations" required>
+                <option value="" selected="selected">Select Location</option>
+            </select>
+            <br />
+            <select class="form-control" placeholder="Select Environment" ng-model="Customer.Environment" ng-options="environment for environment in Environments" required>
+                <option value="" selected="selected">Select Environment</option>
+            </select>
+            <br />
+            <div class="col-auto">
+                <label class="custom-control custom-checkbox mb-2 mr-sm-2 mb-sm-0">
+                    <input ng-click="isAdvanced = !isAdvanced" type="checkbox" class="custom-control-input">
+                    <span class="custom-control-indicator"></span>
+                    <span class="custom-control-description">Advanced</span>
+                </label>
+            </div>
+            <br />
+            <div ng-show="isAdvanced === true">
+                <input type="text" id="inputTenantId" class="form-control" placeholder="Tenant ID of Your Active Directory Id. e.g. 1b63bad5-12dd-420f-a146-1f046e1b5c6c" ng-model="Customer.TenantId" required autofocus>
+                <br />
+                <input type="text" id="inputClientId" class="form-control" placeholder="Client ID of Your Active Directory Application. e.g. 0a246917-de32-4bd6-8cd7-bdcb94a999e7" ng-model="Customer.ClientId" required autofocus>
+                <br />
+                <input type="password" id="inputClientSecret" class="form-control" placeholder="Client Secret of Your Active Directory Application. e.g. 0a24X@e324bd68cd7bdcb94a==" ng-model="Customer.ClientSecret" required autofocus>
+                <br />
+                <input type="text" id="inputSubscription" class="form-control" placeholder="Your Azure Subscription Id. e.g. ec76e23f-d368-483c-88c8-13c3c2e978ba" ng-model="Customer.SubscriptionId" required autofocus>
+                <br />
+            </div>
+            <button id="btnCreate" class="btn btn-lg btn-success btn-block" ng-click="Create(Customer)">Create</button>
+            <br />
+            <!--</form>-->
+        </div>
+
+        <div id="divHome" class="container" ng-if="isHome === true">
+            <h2 class="form-signin-heading">Home</h2>
+            <br />
+            <input type="password" id="inputName" class="form-control" placeholder="PassCode, Will Be Used To Validate the Request. e.g 245d7bd1-72fa-4ab4-a8f2-d224987c8cf4" ng-model="passCode" required autofocus>
+            <br />
+            <button id="btnList" class="btn btn-lg btn-primary btn-block" ng-click="Fetch(passCode)">Fetch</button>
+            <br />
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center" ng-if="EnvList" ng-repeat="env in EnvList">
+                    <span>{{env.Organization}}-{{env.Environment}} ({{env.Location}})</span>
+                    <span>
+                        <a href="#" class="badge badge-primary" ng-hide="env.isBuilding === true" ng-click="Build(env)">Build & Release</a>
+                        <a href="#" class="badge badge-warning" ng-show="env.isBuilding === true">In Progress</a>
+                        <!--Authored by {{env.Author}} on {{env.Date | date:'dd/MM/yyyy'}}-->
+                    </span>
+                </li>
+            </ul>
+            <br />
+        </div>
+
+        <div id="divDelete" class="container" ng-if="isDelete">
+            <h2 class="form-signin-heading">Delete</h2>
+            <br />
+            <input type="password" class="form-control" placeholder="PassCode, Will Be Used To Validate the Request. e.g 245d7bd1-72fa-4ab4-a8f2-d224987c8cf4" ng-model="passCode" required autofocus>
+            <br />
+            <button class="btn btn-lg btn-primary btn-block" ng-click="Fetch(passCode)">Fetch</button>
+            <br />
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center" ng-if="EnvList" ng-repeat="env in EnvList">
+                    <span>{{env.Organization}}-{{env.Environment}} ({{env.Location}})</span>
+                    <a href="#" class="badge badge-danger" ng-hide="env.isDeleting === true" ng-click="Delete(env)">Delete</a>
+                    <a href="#" class="badge badge-primary" ng-show="env.isDeleting === true">In Progress</a>
+                </li>
+            </ul>
+        </div>
+
+    </main>
+
+    <div class="alert alert-danger" role="alert" ng-show="showError">
+        {{errorMessage}}
+    </div>
+    <div class="alert alert-success" role="alert" ng-show="showSuccess">
+        {{successMessage}}
+    </div>
+</body>
+</html>

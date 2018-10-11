@@ -1,0 +1,160 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "organization": {
+      "type": "string"
+    },
+    "environment": {
+      "type": "string"
+    },
+    "aad_tenant": {
+      "type": "string",
+      "defaultValue": "osmosis"
+    },
+    "aad_provider_id": {
+      "type": "string",
+      "defaultValue": "osmosis"
+    },
+    "aad_provider_secret": {
+      "type": "string",
+      "defaultValue": "osmosis"
+    },
+    "aad_consumer_id": {
+      "type": "string",
+      "defaultValue": "osmosis"
+    },
+    "aad_consumer_secret": {
+      "type": "string",
+      "defaultValue": "osmosis"
+    }
+  },
+  "variables": {
+    "provider_consumer_asp_sku": {
+      "name": "S1",
+      "tier": "Standard",
+      "size": "S1",
+      "family": "S",
+      "capacity": 1
+    },
+
+    "provider_storage_sku": {
+      "name": "Standard_RAGRS",
+      "tier": "Standard"
+    },
+
+    "provider_storage_name": "[concat(toLower(parameters('organization')),toLower(parameters('environment')),'provider')]",
+
+    "provider_consumer_asp_name": "[concat(toLower(parameters('organization')),'-',toLower(parameters('environment')),'-provider-consumer')]",
+    "provider_app_name": "[concat(toLower(parameters('organization')),'-',toLower(parameters('environment')),'-provider')]",
+    "consumer_app_name": "[concat(toLower(parameters('organization')),'-',toLower(parameters('environment')),'-consumer')]",
+
+    "sendgrid_account_name": "[concat(toLower(parameters('organization')),toLower(parameters('environment')),'provider')]",
+    "sendgrid_password": "[concat(uniqueString(resourceGroup().id),'1')]"
+  },
+  "resources": [
+    {
+      "comments": "Storage - Provider",
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "[variables('provider_storage_sku').name]",
+        "tier": "[variables('provider_storage_sku').tier]"
+      },
+      "kind": "Storage",
+      "name": "[variables('provider_storage_name')]",
+      "apiVersion": "2016-01-01",
+      "location": "[resourceGroup().location]"
+    },
+    {
+      "comments": "Provider - Consumer ASP",
+      "type": "Microsoft.Web/serverfarms",
+      "sku": {
+        "name": "[variables('provider_consumer_asp_sku').name]",
+        "tier": "[variables('provider_consumer_asp_sku').tier]",
+        "size": "[variables('provider_consumer_asp_sku').size]",
+        "family": "[variables('provider_consumer_asp_sku').family]",
+        "capacity": "[variables('provider_consumer_asp_sku').capacity]"
+      },
+      "kind": "app",
+      "name": "[variables('provider_consumer_asp_name')]",
+      "apiVersion": "2015-08-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "name": "[variables('provider_consumer_asp_name')]"
+      }
+    },
+    {
+      "comments": "Web Apps - Provider",
+      "type": "Microsoft.Web/sites",
+      "kind": "app",
+      "name": "[variables('provider_app_name')]",
+      "apiVersion": "2015-08-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "name": "[variables('provider_app_name')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('provider_consumer_asp_name'))]",
+        "siteConfig": {
+          "alwaysOn": true
+        }
+      },
+      "resources": [
+        {
+          "apiVersion": "2015-08-01",
+          "type": "config",
+          "name": "appsettings",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', variables('provider_app_name'))]",
+            "[resourceId('Microsoft.Storage/storageAccounts', variables('provider_storage_name'))]"
+          ],
+          "properties": {
+            "ProviderStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('provider_storage_name'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('provider_storage_name')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]"
+          }
+        }
+      ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('provider_consumer_asp_name'))]"
+      ]
+    },
+    {
+      "comments": "Web Apps - Consumer",
+      "type": "Microsoft.Web/sites",
+      "kind": "app",
+      "name": "[variables('consumer_app_name')]",
+      "apiVersion": "2015-08-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "name": "[variables('consumer_app_name')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('provider_consumer_asp_name'))]",
+        "siteConfig": {
+          "alwaysOn": true
+        }
+      },
+      "resources": [
+        {
+          "apiVersion": "2015-08-01",
+          "type": "config",
+          "name": "appsettings",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', variables('consumer_app_name'))]"
+          ],
+          "properties": {
+            "ApiUrl": "[concat('https://',variables('provider_app_name'),'.azurewebsites.net/')]"
+          }
+        }
+      ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('provider_consumer_asp_name'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "provider_storage": {
+      "type": "string",
+      "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('provider_storage_name'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('provider_storage_name')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]"
+    },
+    "provider_api": {
+      "type": "string",
+      "value": "[concat('https://',variables('provider_app_name'),'.azurewebsites.net/')]"
+    }
+  }
+}
